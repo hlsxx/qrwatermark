@@ -1,4 +1,5 @@
-use image::{ImageBuffer, Luma};
+use image::{ImageBuffer, Luma, Rgb, Rgba};
+use imageproc::drawing::{draw_cross_mut, Canvas};
 use qrcodegen::{QrCode, QrCodeEcc};
 
 struct QrCodeConfig {
@@ -13,26 +14,26 @@ impl Default for QrCodeConfig {
   }
 }
 
-struct QrImageConfig {
-  pixel_size: u8
+struct ImageConfig {
+  pixel_size: u32
 }
 
-impl Default for QrImageConfig {
+impl Default for ImageConfig {
   fn default() -> Self {
     Self {
-      pixel_size: 10
+      pixel_size: 20
     }
   }
 }
 
 pub struct QrWatermarkConfig {
   qr_code_config: QrCodeConfig,
-  qr_image_config: QrImageConfig
+  image_config: ImageConfig
 }
 
 pub struct QrWatermark {
   qr_code: QrCode,
-  qr_code_image: Option<ImageBuffer<Luma<u8>, Vec<u8>>>,
+  qr_code_image: Option<ImageBuffer<Rgba<u8>, Vec<u8>>>,
   config: QrWatermarkConfig
 }
 
@@ -49,19 +50,36 @@ impl QrWatermark {
   }
 
   fn generate_image(&mut self) {
-    let module_size_in_pixel = 20;
-    let image_size = self.qr_code.size() * module_size_in_pixel;
+    let image_size = self.qr_code.size() as u32 * self.config.image_config.pixel_size;
 
-    self.qr_code_image = Some(ImageBuffer::from_fn(image_size as u32, image_size as u32, |x, y| {
-      let module_x = (x / module_size_in_pixel as u32) as i32;
-      let module_y = (y / module_size_in_pixel as u32) as i32;
+    let mut image = ImageBuffer::from_fn(image_size , image_size, |x, y| {
+      let module_x = (x / self.config.image_config.pixel_size) as i32;
+      let module_y = (y / self.config.image_config.pixel_size) as i32;
+
+      let (r, g, b) = (100, 100, 100);
 
       if self.qr_code.get_module(module_x, module_y) {
-        Luma([0u8])
+        Rgba([r, g, b, 100])
+        // Luma([0u8])
       } else {
-        Luma([255u8])
+        Rgba([255, 255, 255, 100])
+        // Luma([255u8])
       }
-    }));
+    });
+
+    let logo = image::open("logo.jpeg").unwrap();
+    let logo_thumbnail = logo.thumbnail(40, 40);
+
+    for x in 0..logo_thumbnail.width() {
+      for y in 0..logo_thumbnail.height() {
+        let pixel = logo_thumbnail.get_pixel(x, y);
+        image.put_pixel(x, y, pixel);
+      }
+    }
+
+    // image.put_pixel(10, 10, pixel);
+
+    self.qr_code_image = Some(image);
   }
 
   pub fn print_into_console(&self) {
@@ -94,7 +112,7 @@ impl Default for QrWatermark {
     let qr_code = QrCode::encode_text("Hello this is QrWatermark", qrcodegen::QrCodeEcc::Medium).unwrap();
     let config = QrWatermarkConfig {
       qr_code_config: QrCodeConfig::default(),
-      qr_image_config: QrImageConfig::default()
+      image_config: ImageConfig::default()
     };
 
     Self {
