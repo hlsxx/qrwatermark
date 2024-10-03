@@ -70,12 +70,14 @@ impl QrWatermark {
     let logo = image::open("logo.jpeg").unwrap();
     let logo_thumbnail = logo.thumbnail(40, 40);
 
-    for x in 0..logo_thumbnail.width() {
-      for y in 0..logo_thumbnail.height() {
-        let pixel = logo_thumbnail.get_pixel(x, y);
-        image.put_pixel(x, y, pixel);
-      }
-    }
+    // let qr_center_x = (image.size() as u32 - resized_logo.width()) / 2;
+    // let qr_center_y = (image.size() as u32 - resized_logo.height()) / 2;
+    // for x in 0..logo_thumbnail.width() {
+    //   for y in 0..logo_thumbnail.height() {
+    //     let pixel = logo_thumbnail.get_pixel(x, y);
+    //     // image.put_pixel(qr_center_x + x, qr_center_y + y, pixel.to_rgb());
+    //   }
+    // }
 
     // image.put_pixel(10, 10, pixel);
 
