@@ -14,19 +14,17 @@ impl Default for QrCodeConfig {
   }
 }
 
-struct ImageConfig<'a> {
+pub struct ImageConfig {
   pixel_size: u32,
-  logo_path: &'a str,
   width: u32,
   height: u32,
   rgb: Rgb<u8>
 }
 
-impl<'a> Default for ImageConfig<'a> {
+impl Default for ImageConfig {
   fn default() -> Self {
     Self {
       pixel_size: 20,
-      logo_path: "imgs/rust_logo.png",
       width: 100,
       height: 100,
       rgb: Rgb([0, 0, 0])
@@ -34,33 +32,80 @@ impl<'a> Default for ImageConfig<'a> {
   }
 }
 
-pub struct QrWatermarkConfig<'a> {
-  qr_code_config: QrCodeConfig,
-  image_config: ImageConfig<'a>
+pub struct ImageConfigBuilder {
+  pixel_size: Option<u32>,
+  width: Option<u32>,
+  height: Option<u32>,
+  rgb: Option<Rgb<u8>>
+}
+
+impl ImageConfigBuilder {
+  pub fn new() -> Self {
+    Self {
+      pixel_size: None,
+      width: None,
+      height: None,
+      rgb: None
+    }
+  }
+
+  pub fn pixel_size(mut self, size: u32) -> Self {
+    self.pixel_size = Some(size);
+    self
+  }
+
+  pub fn width(mut self, width: u32) -> Self {
+    self.width = Some(width);
+    self
+  }
+
+  pub fn height(mut self, height: u32) -> Self {
+    self.height = Some(height);
+    self
+  }
+
+  pub fn rgb(mut self, rgb: Rgb<u8>) -> Self {
+    self.rgb = Some(rgb);
+    self
+  }
+
+  pub fn build(self) -> ImageConfig {
+    let image_config_default = ImageConfig::default();
+
+    ImageConfig {
+      pixel_size: self.pixel_size.unwrap_or(image_config_default.pixel_size),
+      width: self.width.unwrap_or(image_config_default.width),
+      height: self.height.unwrap_or(image_config_default.height),
+      rgb: self.rgb.unwrap_or(image_config_default.rgb)
+    }
+  }
+
 }
 
 pub struct QrWatermark<'a> {
   qr_code: QrCode,
-  qr_code_image: Option<ImageBuffer<Rgb<u8>, Vec<u8>>>,
-  config: QrWatermarkConfig<'a>
+  logo_path: &'a str,
+  qr_code_config: QrCodeConfig,
+  image_config: ImageConfig
 }
 
 impl<'a> QrWatermark<'a> {
 
-  pub fn new(text: &str, config: QrWatermarkConfig<'a>) -> Self {
+  pub fn new(text: &'a str, logo_path: &'a str) -> Self {
     let qr_code = QrCode::encode_text(text, qrcodegen::QrCodeEcc::Medium).unwrap();
 
     Self {
       qr_code,
-      qr_code_image: None,
-      config
+      logo_path,
+      qr_code_config: QrCodeConfig::default(),
+      image_config: ImageConfigBuilder::new().build()
     }
   }
 
-  fn generate_image(&mut self) {
-    let image_config = &self.config.image_config;
+  fn generate_image(&mut self) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
+    let image_config = &self.image_config;
     let image_size = self.qr_code.size() as u32
-      * self.config.image_config.pixel_size;
+      * image_config.pixel_size;
 
     let mut image = ImageBuffer::from_fn(image_size, image_size, |x, y| {
       let module_x = (x / image_config.pixel_size) as i32;
@@ -76,7 +121,7 @@ impl<'a> QrWatermark<'a> {
       }
     });
 
-    let logo = image::open(image_config.logo_path).unwrap();
+    let logo = image::open(self.logo_path).unwrap();
     let logo_thumbnail = logo.thumbnail(image_config.width, image_config.height);
 
     let qr_center_x = (image_size - logo_thumbnail.width()) / 2;
@@ -89,9 +134,7 @@ impl<'a> QrWatermark<'a> {
       }
     }
 
-    // image.put_pixel(10, 10, pixel);
-
-    self.qr_code_image = Some(image);
+    image
   }
 
   pub fn print_into_console(&self) {
@@ -108,11 +151,9 @@ impl<'a> QrWatermark<'a> {
   }
 
   pub fn save_as_png(&mut self, path: &str) -> Result<(), Box<dyn std::error::Error>> {
-    self.generate_image();
+    let image = self.generate_image();
 
-    if let Some(qr_code_image) = &self.qr_code_image {
-      qr_code_image.save(path)?;
-    }
+    image.save(path)?;
 
     Ok(())
   }
@@ -122,15 +163,12 @@ impl<'a> QrWatermark<'a> {
 impl<'a> Default for QrWatermark<'a> {
   fn default() -> Self {
     let qr_code = QrCode::encode_text("Hello this is QrWatermark", qrcodegen::QrCodeEcc::Medium).unwrap();
-    let config = QrWatermarkConfig {
-      qr_code_config: QrCodeConfig::default(),
-      image_config: ImageConfig::default()
-    };
 
     Self {
       qr_code,
-      qr_code_image: None,
-      config
+      logo_path: "imgs/rust_logo.png",
+      qr_code_config: QrCodeConfig::default(),
+      image_config: ImageConfigBuilder::new().build()
     }
   }
 }
