@@ -1,11 +1,12 @@
-use qrwatermark::{LogoConfigBuilder, QrWatermark};
+use qrwatermark::QrWatermark;
+use qrwatermark::configs::image_config::ImageConfigBuilder;
 
 fn main() {
-  let logo_config = LogoConfigBuilder::new()
+  let image_config = ImageConfigBuilder::new()
     .build();
 
   let mut qrw = QrWatermark::new("Hello", "tss_id.jpg")
-    .logo_config(logo_config);
+    .image_config(image_config);
 
   qrw.save_as_png("test.png").expect("Error while saving image");
 }
