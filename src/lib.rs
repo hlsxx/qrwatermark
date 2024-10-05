@@ -42,9 +42,9 @@ impl<'a> QrWatermark<'a> {
     }
   }
 
-  pub fn image_config(mut self, image_config: ImageConfig) -> Self {
-    self.image_config = image_config;
-    self
+  #[allow(unused)]
+  fn generate_color_gradient(&mut self) {
+    !unimplemented!()
   }
 
   fn generate_image(&mut self) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
@@ -68,9 +68,9 @@ impl<'a> QrWatermark<'a> {
       }
 
       if self.qr_code.get_module(module_x, module_y) {
-        self.image_config.rgb
+        self.image_config.color
       } else {
-        Rgb([255, 255, 255])
+        self.image_config.background_color
       }
     });
 
@@ -90,6 +90,11 @@ impl<'a> QrWatermark<'a> {
     }
 
     image
+  }
+
+  pub fn image_config(mut self, image_config: ImageConfig) -> Self {
+    self.image_config = image_config;
+    self
   }
 
   pub fn print_into_console(&self) {

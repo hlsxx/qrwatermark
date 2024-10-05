@@ -5,7 +5,9 @@ use crate::traits::builder::Builder;
 pub struct ImageConfig {
   pub pixel_size: u32,
   pub margin_size: u32,
-  pub rgb: Rgb<u8>,
+  pub color: Rgb<u8>,
+  pub background_color: Rgb<u8>,
+  pub is_gradient_enabled: bool
 }
 
 impl Default for ImageConfig {
@@ -13,7 +15,9 @@ impl Default for ImageConfig {
     Self {
       pixel_size: 10,
       margin_size: 1,
-      rgb: Rgb([0, 0, 0]),
+      color: Rgb([0, 0, 0]),
+      background_color: Rgb([255, 255, 255]),
+      is_gradient_enabled: false
     }
   }
 }
@@ -21,7 +25,9 @@ impl Default for ImageConfig {
 pub struct ImageConfigBuilder {
   pixel_size: Option<u32>,
   margin_size: Option<u32>,
-  rgb: Option<Rgb<u8>>,
+  color: Option<Rgb<u8>>,
+  background_color: Option<Rgb<u8>>,
+  is_gradient_enabled: Option<bool>
 }
 
 impl Builder<ImageConfig> for ImageConfigBuilder {
@@ -29,7 +35,9 @@ impl Builder<ImageConfig> for ImageConfigBuilder {
     Self {
       pixel_size: None,
       margin_size: None,
-      rgb: None,
+      color: None,
+      background_color: None,
+      is_gradient_enabled: None
     }
   }
 
@@ -38,8 +46,10 @@ impl Builder<ImageConfig> for ImageConfigBuilder {
 
     ImageConfig {
       pixel_size: self.pixel_size.unwrap_or(image_config_default.pixel_size),
-      rgb: self.rgb.unwrap_or(image_config_default.rgb),
-      margin_size: self.margin_size.unwrap_or(image_config_default.margin_size)
+      margin_size: self.margin_size.unwrap_or(image_config_default.margin_size),
+      color: self.color.unwrap_or(image_config_default.color),
+      background_color: self.background_color.unwrap_or(image_config_default.background_color),
+      is_gradient_enabled: self.is_gradient_enabled.unwrap_or(image_config_default.is_gradient_enabled)
     }
   }
 
@@ -56,8 +66,13 @@ impl ImageConfigBuilder {
     self
   }
 
-  pub fn rgb(mut self, rgb: Rgb<u8>) -> Self {
-    self.rgb = Some(rgb);
+  pub fn color(mut self, rgb: Rgb<u8>) -> Self {
+    self.color = Some(rgb);
+    self
+  }
+
+  pub fn background_color(mut self, rgb: Rgb<u8>) -> Self {
+    self.background_color = Some(rgb);
     self
   }
 
