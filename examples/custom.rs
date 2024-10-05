@@ -1,5 +1,6 @@
 use qrwatermark::QrWatermark;
 use qrwatermark::configs::image_config::ImageConfigBuilder;
+use qrwatermark::traits::builder::Builder;
 
 fn main() {
   let image_config = ImageConfigBuilder::new()
