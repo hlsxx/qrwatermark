@@ -9,8 +9,8 @@ imageproc = "0.25.0"
 qrcodegen = "1.8.0"
 rusttype = "0.9.3"
 
-# [lib]
-# crate-type = ["cdylib"]
+[lib]
+crate-type = ["rlib", "cdylib"]
 
 [profile.release]
 lto = true

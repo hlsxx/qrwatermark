@@ -1,6 +1,8 @@
 pub mod configs;
 pub mod traits;
 
+use std::{env::current_dir, path::{absolute, Path, PathBuf}};
+
 use traits::builder::Builder;
 
 use image::{ImageBuffer, Pixel, Rgb};
@@ -20,22 +22,23 @@ impl Default for QrCodeConfig {
   }
 }
 
-pub struct QrWatermark<'a> {
+pub struct QrWatermark {
   qr_code: QrCode,
-  logo_path: &'a str,
+  logo_path: PathBuf,
   qr_code_config: QrCodeConfig,
   image_config: ImageConfig,
   logo_config: LogoConfig
 }
 
-impl<'a> QrWatermark<'a> {
+impl<'a> QrWatermark {
 
   pub fn new(text: &'a str, logo_path: &'a str) -> Self {
     let qr_code = QrCode::encode_text(text, qrcodegen::QrCodeEcc::Medium).unwrap();
+    let logo_path_buf = PathBuf::from(logo_path);
 
     Self {
       qr_code,
-      logo_path,
+      logo_path: logo_path_buf,
       qr_code_config: QrCodeConfig::default(),
       image_config: ImageConfigBuilder::new().build(),
       logo_config: LogoConfigBuilder::new().build()
@@ -74,7 +77,8 @@ impl<'a> QrWatermark<'a> {
       }
     });
 
-    let logo = image::open(self.logo_path).unwrap();
+    let logo = image::open(&self.logo_path).unwrap();
+
     let logo_thumbnail = logo.thumbnail(
       self.logo_config.width,
       self.logo_config.height);
@@ -120,13 +124,16 @@ impl<'a> QrWatermark<'a> {
 
 }
 
-impl<'a> Default for QrWatermark<'a> {
+impl<'a> Default for QrWatermark {
   fn default() -> Self {
     let qr_code = QrCode::encode_text("Hello this is QrWatermark", qrcodegen::QrCodeEcc::Medium).unwrap();
 
+    let mut logo_buf_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    logo_buf_path.push("imgs/rust_logo.png");
+
     Self {
       qr_code,
-      logo_path: "imgs/rust_logo.png",
+      logo_path: logo_buf_path,
       qr_code_config: QrCodeConfig::default(),
       image_config: ImageConfigBuilder::new().build(),
       logo_config: LogoConfigBuilder::new().build()
