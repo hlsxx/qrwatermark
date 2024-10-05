@@ -12,7 +12,7 @@ impl Default for ImageConfig {
   fn default() -> Self {
     Self {
       pixel_size: 10,
-      margin_size: 5,
+      margin_size: 1,
       rgb: Rgb([0, 0, 0]),
     }
   }
