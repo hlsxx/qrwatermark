@@ -147,3 +147,47 @@ impl<'a> Default for QrWatermark {
     }
   }
 }
+
+
+/* ------------- FFI-compatible functions ------------- */
+use std::os::raw::{c_char, c_uint};
+use std::ffi::{CStr, CString};
+
+#[no_mangle]
+pub extern "C" fn generate_qrwatermark(
+  c_qr_text: *const c_char,
+  c_logo_path: *const c_char,
+  c_image_name: *const c_char,
+) -> c_uint {
+  let qr_text = unsafe { CStr::from_ptr(c_qr_text).to_str().unwrap() };
+  let logo_path = unsafe { CStr::from_ptr(c_logo_path).to_str().unwrap() };
+  let image_name = unsafe { CStr::from_ptr(c_image_name).to_str().unwrap() };
+
+  let mut qrw = QrWatermark::new(qr_text)
+    .logo(logo_path);
+
+  match qrw.save_as_png(image_name) {
+    Ok(_) => 1,
+    Err(_) => 0
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn generate_qrwatermark_path_test() {
+    let c_qr_text = CString::new("Hello").unwrap();
+    let c_logo_path = CString::new("/mnt/holes/rust/qrwatermark/imgs/rust_logo.png").unwrap();
+    let c_image_name = CString::new("test.png").unwrap();
+
+    let is_qrwatemark_created = generate_qrwatermark(
+      c_qr_text.as_ptr(),
+      c_logo_path.as_ptr(),
+      c_image_name.as_ptr()
+    );
+
+    assert_eq!(is_qrwatemark_created, 1);
+  }
+}
