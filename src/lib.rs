@@ -49,11 +49,23 @@ impl<'a> QrWatermark<'a> {
 
   fn generate_image(&mut self) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
     let image_size = self.qr_code.size() as u32
-      * self.image_config.pixel_size;
+      * self.image_config.pixel_size
+      + (self.image_config.margin_size * self.image_config.pixel_size) * 2;
 
     let mut image = ImageBuffer::from_fn(image_size, image_size, |x, y| {
-      let module_x = (x / self.image_config.pixel_size) as i32;
-      let module_y = (y / self.image_config.pixel_size) as i32;
+      let x_with_margin = x as i32 - (self.image_config.margin_size * self.image_config.pixel_size) as i32;
+      let y_with_margin = y as i32 - (self.image_config.margin_size * self.image_config.pixel_size) as i32;
+
+      let mut module_x = x_with_margin;
+      let mut module_y = y_with_margin;
+
+      if x_with_margin > 0 {
+        module_x = x_with_margin / self.image_config.pixel_size as i32;
+      }
+
+      if y_with_margin > 0 {
+        module_y = y_with_margin / self.image_config.pixel_size as i32;
+      }
 
       if self.qr_code.get_module(module_x, module_y) {
         self.image_config.rgb
