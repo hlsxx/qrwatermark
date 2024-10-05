@@ -24,7 +24,7 @@ impl Default for QrCodeConfig {
 
 pub struct QrWatermark {
   qr_code: QrCode,
-  logo_path: PathBuf,
+  logo_path: Option<PathBuf>,
   qr_code_config: QrCodeConfig,
   image_config: ImageConfig,
   logo_config: LogoConfig
@@ -32,13 +32,12 @@ pub struct QrWatermark {
 
 impl<'a> QrWatermark {
 
-  pub fn new(text: &'a str, logo_path: &'a str) -> Self {
+  pub fn new(text: &'a str) -> Self {
     let qr_code = QrCode::encode_text(text, qrcodegen::QrCodeEcc::Medium).unwrap();
-    let logo_path_buf = PathBuf::from(logo_path);
 
     Self {
       qr_code,
-      logo_path: logo_path_buf,
+      logo_path: None,
       qr_code_config: QrCodeConfig::default(),
       image_config: ImageConfigBuilder::new().build(),
       logo_config: LogoConfigBuilder::new().build()
@@ -77,23 +76,31 @@ impl<'a> QrWatermark {
       }
     });
 
-    let logo = image::open(&self.logo_path).unwrap();
+    // Generate logo
+    if let Some(logo_path) = &self.logo_path {
+      let logo = image::open(logo_path).unwrap();
 
-    let logo_thumbnail = logo.thumbnail(
-      self.logo_config.width,
-      self.logo_config.height);
+      let logo_thumbnail = logo.thumbnail(
+        self.logo_config.width,
+        self.logo_config.height);
 
-    let qr_center_x = (image_size - logo_thumbnail.width()) / 2;
-    let qr_center_y = (image_size - logo_thumbnail.height()) / 2;
+      let qr_center_x = (image_size - logo_thumbnail.width()) / 2;
+      let qr_center_y = (image_size - logo_thumbnail.height()) / 2;
 
-    for x in 0..logo_thumbnail.width() {
-      for y in 0..logo_thumbnail.height() {
-        let pixel = logo_thumbnail.get_pixel(x, y).to_rgb();
-        image.put_pixel(qr_center_x + x, qr_center_y + y, pixel);
+      for x in 0..logo_thumbnail.width() {
+        for y in 0..logo_thumbnail.height() {
+          let pixel = logo_thumbnail.get_pixel(x, y).to_rgb();
+          image.put_pixel(qr_center_x + x, qr_center_y + y, pixel);
+        }
       }
     }
 
     image
+  }
+
+  pub fn logo(mut self, logo_path: &'a str) -> Self {
+    self.logo_path = Some(PathBuf::from(logo_path));
+    self
   }
 
   pub fn image_config(mut self, image_config: ImageConfig) -> Self {
@@ -133,7 +140,7 @@ impl<'a> Default for QrWatermark {
 
     Self {
       qr_code,
-      logo_path: logo_buf_path,
+      logo_path: Some(logo_buf_path),
       qr_code_config: QrCodeConfig::default(),
       image_config: ImageConfigBuilder::new().build(),
       logo_config: LogoConfigBuilder::new().build()
