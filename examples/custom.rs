@@ -6,7 +6,7 @@ fn main() {
   let image_config = ImageConfigBuilder::new()
     .build();
 
-  let mut qrw = QrWatermark::new("Hello")
+  let mut qrw = QrWatermark::new("e0d32992d96e5eda910fe675e20bbce0")
     .logo("imgs/rust_logo.png")
     .image_config(image_config);
 
