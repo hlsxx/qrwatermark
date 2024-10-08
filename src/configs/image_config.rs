@@ -5,8 +5,8 @@ use crate::traits::builder::Builder;
 pub struct ImageConfig {
   pub pixel_size: u32,
   pub margin_size: u32,
-  pub color: Rgb<u8>,
-  pub background_color: Rgb<u8>,
+  pub color: Vec<u8>,
+  pub background_color: Vec<u8>,
   pub is_gradient_enabled: bool
 }
 
@@ -15,8 +15,8 @@ impl Default for ImageConfig {
     Self {
       pixel_size: 10,
       margin_size: 1,
-      color: Rgb([0, 0, 0]),
-      background_color: Rgb([255, 255, 255]),
+      color: vec![0, 0, 0],
+      background_color: vec![255, 255, 255],
       is_gradient_enabled: false
     }
   }
@@ -25,8 +25,8 @@ impl Default for ImageConfig {
 pub struct ImageConfigBuilder {
   pixel_size: Option<u32>,
   margin_size: Option<u32>,
-  color: Option<Rgb<u8>>,
-  background_color: Option<Rgb<u8>>,
+  color: Option<Vec<u8>>,
+  background_color: Option<Vec<u8>>,
   is_gradient_enabled: Option<bool>
 }
 
@@ -66,12 +66,12 @@ impl ImageConfigBuilder {
     self
   }
 
-  pub fn color(mut self, rgb: Rgb<u8>) -> Self {
+  pub fn color(mut self, rgb: Vec<u8>) -> Self {
     self.color = Some(rgb);
     self
   }
 
-  pub fn background_color(mut self, rgb: Rgb<u8>) -> Self {
+  pub fn background_color(mut self, rgb: Vec<u8>) -> Self {
     self.background_color = Some(rgb);
     self
   }

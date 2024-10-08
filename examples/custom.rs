@@ -6,7 +6,7 @@ use qrwatermark::traits::builder::Builder;
 fn main() {
   // Custom image config
   let image_config = ImageConfigBuilder::new()
-    .color(image::Rgb([14, 99, 88]))
+    .color(vec![14, 99, 88])
     .build();
 
   // Custom logo config

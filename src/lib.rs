@@ -3,12 +3,24 @@ pub mod traits;
 
 use std::{env::current_dir, path::{absolute, Path, PathBuf}};
 
-use traits::builder::Builder;
+use traits::{builder::Builder, rgb::ToRgb};
 
 use image::{ImageBuffer, Pixel, Rgb};
 use imageproc::drawing::Canvas;
 use qrcodegen::{QrCode, QrCodeEcc};
 use configs::{image_config::{ImageConfig, ImageConfigBuilder}, logo_config::{LogoConfig, LogoConfigBuilder}};
+
+// TODO
+// Delete unwraps
+impl ToRgb for Vec<u8> {
+  fn to_rgb(&self) -> Result<Rgb<u8>, &'static str> {
+    if self.len() != 3 {
+      return Err("Vector must have size of 3");
+    }
+
+    Ok(Rgb([self[0], self[1], self[2]]))
+  }
+}
 
 struct QrCodeConfig {
   ecc: QrCodeEcc,
@@ -70,9 +82,9 @@ impl<'a> QrWatermark {
       }
 
       if self.qr_code.get_module(module_x, module_y) {
-        self.image_config.color
+        self.image_config.color.to_rgb().unwrap()
       } else {
-        self.image_config.background_color
+        self.image_config.background_color.to_rgb().unwrap()
       }
     });
 
