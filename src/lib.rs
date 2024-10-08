@@ -8,9 +8,9 @@ use traits::{builder::Builder, rgb::ToRgb};
 use image::{ImageBuffer, Pixel, Rgb};
 use imageproc::drawing::Canvas;
 use qrcodegen::{QrCode, QrCodeEcc};
-use configs::{image_config::{ImageConfig, ImageConfigBuilder}, logo_config::{LogoConfig, LogoConfigBuilder}};
+use configs::image_config::{ImageConfigBuilder, ImageConfig};
+use configs::logo_config::{LogoConfigBuilder, LogoConfig};
 
-// TODO
 // Delete unwraps
 impl ToRgb for Vec<u8> {
   fn to_rgb(&self) -> Result<Rgb<u8>, &'static str> {
