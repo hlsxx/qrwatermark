@@ -80,18 +80,16 @@ impl<'a> QrWatermark {
     if let Some(logo_path) = &self.logo_path {
       let logo = image::open(logo_path).unwrap();
 
-      let margin = 5;
-
       let logo_width = self.logo_config.width;
       let logo_height = self.logo_config.height;
 
       let logo_thumbnail = logo.thumbnail(logo_width, logo_height);
 
-      let qr_center_x = (image_size - logo_width) / 2;
-      let qr_center_y = (image_size - logo_height) / 2;
+      let qr_center_x = (image_size - logo_thumbnail.width()) / 2;
+      let qr_center_y = (image_size - logo_thumbnail.height()) / 2;
 
-      for x in 0..self.logo_config.width {
-        for y in 0..self.logo_config.height {
+      for x in 0..logo_thumbnail.width() {
+        for y in 0..logo_thumbnail.height() {
           let pixel = logo_thumbnail.get_pixel(x, y).to_rgb();
           image.put_pixel(qr_center_x + x, qr_center_y + y, pixel);
         }
@@ -106,8 +104,13 @@ impl<'a> QrWatermark {
     self
   }
 
-  pub fn image_config(mut self, image_config: ImageConfig) -> Self {
-    self.image_config = image_config;
+  pub fn image_config(mut self, config: ImageConfig) -> Self {
+    self.image_config = config;
+    self
+  }
+
+  pub fn logo_config(mut self, config: LogoConfig) -> Self {
+    self.logo_config = config;
     self
   }
 
