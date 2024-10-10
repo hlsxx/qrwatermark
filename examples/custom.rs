@@ -6,7 +6,8 @@ use qrwatermark::traits::builder::Builder;
 fn main() {
   // Custom image config
   let image_config = ImageConfigBuilder::new()
-    .color(vec![14, 99, 88])
+    .color([14, 99, 88])
+    .is_gradient_enabled()
     .build();
 
   // Custom logo config
@@ -15,7 +16,7 @@ fn main() {
     .height(70)
     .build();
 
-  let mut qrw = QrWatermark::new("Custom text")
+  let mut qrw = QrWatermark::new("Custom text with a gradient")
     .logo("imgs/rust_logo.png")
     .logo_config(logo_config)
     .image_config(image_config);

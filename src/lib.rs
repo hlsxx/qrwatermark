@@ -56,9 +56,16 @@ impl<'a> QrWatermark {
     }
   }
 
-  #[allow(unused)]
-  fn generate_color_gradient(&mut self) {
-    !unimplemented!()
+  fn get_color_gradient(&mut self) -> [u8; 3] {
+    let mut new_color = self.image_config.color;
+
+    new_color[0] = new_color[0].wrapping_add(1);
+    new_color[1] = new_color[1].wrapping_add(2);
+    new_color[2] = new_color[2].wrapping_add(3);
+
+    self.image_config.color = new_color;
+
+    return new_color;
   }
 
   fn generate_image(&mut self) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
@@ -66,6 +73,7 @@ impl<'a> QrWatermark {
       * self.image_config.pixel_size
       + (self.image_config.margin_size * self.image_config.pixel_size) * 2;
 
+    let mut last_y = 0;
     let mut image = ImageBuffer::from_fn(image_size, image_size, |x, y| {
       let x_with_margin = x as i32 - (self.image_config.margin_size * self.image_config.pixel_size) as i32;
       let y_with_margin = y as i32 - (self.image_config.margin_size * self.image_config.pixel_size) as i32;
@@ -79,12 +87,25 @@ impl<'a> QrWatermark {
 
       if y_with_margin > 0 {
         module_y = y_with_margin / self.image_config.pixel_size as i32;
-      }
+      };
+
+      let image_color = if self.image_config.is_gradient_enabled {
+        if last_y != module_y {
+          last_y = module_y;
+          self.get_color_gradient()
+        } else {
+          self.image_config.color
+        }
+      } else {
+        self.image_config.color
+      };
+
+      // println!("{:?}", module_x);
 
       if self.qr_code.get_module(module_x, module_y) {
-        self.image_config.color.to_rgb().unwrap()
+        Rgb::from(image_color)
       } else {
-        self.image_config.background_color.to_rgb().unwrap()
+        Rgb::from(self.image_config.background_color)
       }
     });
 
