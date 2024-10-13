@@ -6,6 +6,7 @@ use qrwatermark::traits::builder::Builder;
 fn main() {
   // Custom image config
   let image_config = ImageConfigBuilder::new()
+    // .color_gradient(([206, 66, 43], [23, 23, 23])) // Custom gradient colors
     .color([14, 99, 88])
     .is_gradient_enabled()
     .build();

@@ -1,7 +1,7 @@
 pub mod configs;
 pub mod traits;
 
-use std::{env::current_dir, path::{absolute, Path, PathBuf}};
+use std::path::PathBuf;
 
 use traits::{builder::Builder, rgb::ToRgb};
 
@@ -22,6 +22,7 @@ impl ToRgb for Vec<u8> {
   }
 }
 
+#[allow(unused)]
 struct QrCodeConfig {
   ecc: QrCodeEcc,
 }
@@ -34,6 +35,7 @@ impl Default for QrCodeConfig {
   }
 }
 
+#[allow(unused)]
 pub struct QrWatermark {
   qr_code: QrCode,
   logo_path: Option<PathBuf>,
@@ -45,7 +47,8 @@ pub struct QrWatermark {
 impl<'a> QrWatermark {
 
   pub fn new(text: &'a str) -> Self {
-    let qr_code = QrCode::encode_text(text, qrcodegen::QrCodeEcc::Medium).unwrap();
+    let qr_code = QrCode::encode_text(text, qrcodegen::QrCodeEcc::Medium)
+      .expect("Some error occurs when generating QR code");
 
     Self {
       qr_code,
@@ -56,12 +59,14 @@ impl<'a> QrWatermark {
     }
   }
 
-  fn update_color(&mut self) {
-    let color = &mut self.image_config.color;
+  fn set_auto_gradient_color(&mut self) {
+    let new_color = [
+      self.image_config.color[0].wrapping_add(1),
+      self.image_config.color[1].wrapping_add(2),
+      self.image_config.color[2].wrapping_add(3),
+    ];
 
-    color[0] = color[0].wrapping_add(1);
-    color[1] = color[1].wrapping_add(2);
-    color[2] = color[2].wrapping_add(3);
+    self.image_config.color.copy_from_slice(&new_color);
   }
 
   fn generate_image(&mut self) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
@@ -85,9 +90,18 @@ impl<'a> QrWatermark {
         module_y = y_with_margin / self.image_config.pixel_size as i32;
       };
 
-      if self.image_config.is_gradient_enabled && last_y != module_y {
-        last_y = module_y;
-        self.update_color();
+      if last_y != module_y {
+        if let Some((start_color, end_color)) = self.image_config.color_gradient {
+          let t = y as f32 / (image_size - 1) as f32;
+          let r = (start_color[0] as f32 * (1.0 - t) + end_color[0] as f32 * t) as u8;
+          let g = (start_color[1] as f32 * (1.0 - t) + end_color[1] as f32 * t) as u8;
+          let b = (start_color[2] as f32 * (1.0 - t) + end_color[2] as f32 * t) as u8;
+
+          self.image_config.color.copy_from_slice(&[r, g, b]);
+        } else if self.image_config.is_gradient_enabled {
+          last_y = module_y;
+          self.set_auto_gradient_color();
+        }
       }
 
       if self.qr_code.get_module(module_x, module_y) {
@@ -172,49 +186,5 @@ impl<'a> Default for QrWatermark {
       image_config: ImageConfigBuilder::new().build(),
       logo_config: LogoConfigBuilder::new().build()
     }
-  }
-}
-
-
-/* ------------- FFI-compatible functions ------------- */
-use std::os::raw::{c_char, c_uint};
-use std::ffi::{CStr, CString};
-
-#[no_mangle]
-pub extern "C" fn generate_qrwatermark(
-  c_qr_text: *const c_char,
-  c_logo_path: *const c_char,
-  c_image_name: *const c_char,
-) -> c_uint {
-  let qr_text = unsafe { CStr::from_ptr(c_qr_text).to_str().unwrap() };
-  let logo_path = unsafe { CStr::from_ptr(c_logo_path).to_str().unwrap() };
-  let image_name = unsafe { CStr::from_ptr(c_image_name).to_str().unwrap() };
-
-  let mut qrw = QrWatermark::new(qr_text)
-    .logo(logo_path);
-
-  match qrw.save_as_png(image_name) {
-    Ok(_) => 1,
-    Err(_) => 0
-  }
-}
-
-#[cfg(test)]
-mod tests {
-  use super::*;
-
-  #[test]
-  fn generate_qrwatermark_path_test() {
-    let c_qr_text = CString::new("Hello").unwrap();
-    let c_logo_path = CString::new("/mnt/holes/rust/qrwatermark/imgs/rust_logo.png").unwrap();
-    let c_image_name = CString::new("test.png").unwrap();
-
-    let is_qrwatemark_created = generate_qrwatermark(
-      c_qr_text.as_ptr(),
-      c_logo_path.as_ptr(),
-      c_image_name.as_ptr()
-    );
-
-    assert_eq!(is_qrwatemark_created, 1);
   }
 }
