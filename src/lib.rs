@@ -1,12 +1,12 @@
 pub mod configs;
 pub mod traits;
 
-use std::error;
+use std::{error, io};
 use std::path::PathBuf;
 
 use traits::{builder::Builder, rgb::ToRgb};
 
-use image::{ImageBuffer, Pixel, Rgb};
+use image::{DynamicImage, ImageBuffer, Pixel, Rgb};
 use imageproc::drawing::Canvas;
 use qrcodegen::{QrCode, QrCodeEcc};
 use configs::image_config::{ImageConfigBuilder, ImageConfig};
@@ -38,7 +38,6 @@ impl Default for QrCodeConfig {
 #[allow(unused)]
 pub struct QrWatermark<'a> {
   text: &'a str,
-  // qr_code: QrCode,
   logo_path: Option<PathBuf>,
   qr_code_config: QrCodeConfig,
   image_config: ImageConfig,
@@ -54,6 +53,16 @@ impl<'a> QrWatermark<'a> {
       qr_code_config: QrCodeConfig::default(),
       image_config: ImageConfigBuilder::new().build(),
       logo_config: LogoConfigBuilder::new().build()
+    }
+  }
+
+  fn open_logo_path(&self, logo_path: &PathBuf) -> Result<DynamicImage, Box<dyn error::Error>> {
+    match image::open(&logo_path) {
+      Ok(image) => Ok(image),
+      Err(_) => {
+        let message = format!("Unable to open image '{}'", logo_path.to_string_lossy());
+        Err(Box::new(io::Error::new(std::io::ErrorKind::Other, message)))
+      }
     }
   }
 
@@ -118,7 +127,7 @@ impl<'a> QrWatermark<'a> {
 
     // Generate logo
     if let Some(logo_path) = &self.logo_path {
-      let logo = image::open(logo_path)?;
+      let logo = self.open_logo_path(&logo_path)?;
 
       let logo_width = self.logo_config.width;
       let logo_height = self.logo_config.height;

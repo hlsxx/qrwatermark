@@ -1,6 +1,6 @@
 [package]
 name = "qrwatermark"
-version = "0.1.0"
+version = "1.0.1"
 edition = "2021"
 
 [dependencies]
@@ -14,3 +14,4 @@ crate-type = ["rlib", "cdylib"]
 
 [profile.release]
 lto = true
+panic = "abort"
