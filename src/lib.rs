@@ -1,6 +1,7 @@
 pub mod configs;
 pub mod traits;
 
+use std::error;
 use std::path::PathBuf;
 
 use traits::{builder::Builder, rgb::ToRgb};
@@ -11,7 +12,6 @@ use qrcodegen::{QrCode, QrCodeEcc};
 use configs::image_config::{ImageConfigBuilder, ImageConfig};
 use configs::logo_config::{LogoConfigBuilder, LogoConfig};
 
-// Delete unwraps
 impl ToRgb for Vec<u8> {
   fn to_rgb(&self) -> Result<Rgb<u8>, &'static str> {
     if self.len() != 3 {
@@ -36,27 +36,30 @@ impl Default for QrCodeConfig {
 }
 
 #[allow(unused)]
-pub struct QrWatermark {
-  qr_code: QrCode,
+pub struct QrWatermark<'a> {
+  text: &'a str,
+  // qr_code: QrCode,
   logo_path: Option<PathBuf>,
   qr_code_config: QrCodeConfig,
   image_config: ImageConfig,
   logo_config: LogoConfig
 }
 
-impl<'a> QrWatermark {
+impl<'a> QrWatermark<'a> {
 
   pub fn new(text: &'a str) -> Self {
-    let qr_code = QrCode::encode_text(text, qrcodegen::QrCodeEcc::Medium)
-      .expect("Some error occurs when generating QR code");
-
     Self {
-      qr_code,
+      text,
       logo_path: None,
       qr_code_config: QrCodeConfig::default(),
       image_config: ImageConfigBuilder::new().build(),
       logo_config: LogoConfigBuilder::new().build()
     }
+  }
+
+  fn generate_qr_code(&self) -> Result<QrCode, Box<dyn error::Error>> {
+    let qr_code = QrCode::encode_text(self.text, qrcodegen::QrCodeEcc::Medium)?;
+    Ok(qr_code)
   }
 
   fn set_auto_gradient_color(&mut self) {
@@ -69,8 +72,10 @@ impl<'a> QrWatermark {
     self.image_config.color.copy_from_slice(&new_color);
   }
 
-  fn generate_image(&mut self) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
-    let image_size = self.qr_code.size() as u32
+  fn generate_image(&mut self) -> Result<ImageBuffer<Rgb<u8>, Vec<u8>>, Box<dyn error::Error>> {
+    let qr_code = self.generate_qr_code()?;
+
+    let image_size = qr_code.size() as u32
       * self.image_config.pixel_size
       + (self.image_config.margin_size * self.image_config.pixel_size) * 2;
 
@@ -104,7 +109,7 @@ impl<'a> QrWatermark {
         }
       }
 
-      if self.qr_code.get_module(module_x, module_y) {
+      if qr_code.get_module(module_x, module_y) {
         Rgb::from(self.image_config.color)
       } else {
         Rgb::from(self.image_config.background_color)
@@ -113,7 +118,7 @@ impl<'a> QrWatermark {
 
     // Generate logo
     if let Some(logo_path) = &self.logo_path {
-      let logo = image::open(logo_path).unwrap();
+      let logo = image::open(logo_path)?;
 
       let logo_width = self.logo_config.width;
       let logo_height = self.logo_config.height;
@@ -131,7 +136,7 @@ impl<'a> QrWatermark {
       }
     }
 
-    image
+    Ok(image)
   }
 
   pub fn logo(mut self, logo_path: &'a str) -> Self {
@@ -149,22 +154,24 @@ impl<'a> QrWatermark {
     self
   }
 
-  pub fn print_into_console(&self) {
-    let n = self.qr_code.size();
+  pub fn print_into_console(&self) -> Result<(), Box<dyn error::Error>> {
+    let qr_code = self.generate_qr_code()?;
+    let n = qr_code.size();
 
     for i in 0..n {
       for j in 0..n {
-        let c = if self.qr_code.get_module(i, j) { '█' } else { ' ' };
+        let c = if qr_code.get_module(i, j) { '█' } else { ' ' };
         print!("{0}{0}", c);
       }
 
       println!();
     }
+
+    Ok(())
   }
 
-  pub fn save_as_png(&mut self, path: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let image = self.generate_image();
-
+  pub fn save_as_image(&mut self, path: &str) -> Result<(), Box<dyn error::Error>> {
+    let image = self.generate_image()?;
     image.save(path)?;
 
     Ok(())
@@ -172,15 +179,13 @@ impl<'a> QrWatermark {
 
 }
 
-impl<'a> Default for QrWatermark {
+impl<'a> Default for QrWatermark<'a> {
   fn default() -> Self {
-    let qr_code = QrCode::encode_text("Hello this is QrWatermark", qrcodegen::QrCodeEcc::Medium).unwrap();
-
     let mut logo_buf_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     logo_buf_path.push("imgs/rust_logo.png");
 
     Self {
-      qr_code,
+      text: "Hello this is QrWatermark",
       logo_path: Some(logo_buf_path),
       qr_code_config: QrCodeConfig::default(),
       image_config: ImageConfigBuilder::new().build(),
