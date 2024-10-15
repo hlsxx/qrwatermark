@@ -22,5 +22,5 @@ fn main() {
     .logo_config(logo_config)
     .image_config(image_config);
 
-  qrw.save_as_png("./imgs/example2.png").expect("Unable to save image");
+  qrw.save_as_image("./imgs/example2.png").expect("Unable to save image");
 }
