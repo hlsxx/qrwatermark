@@ -2,6 +2,13 @@
 name = "qrwatermark"
 version = "1.0.1"
 edition = "2021"
+authors = ["hlsxx <holespato@email.com>"]
+license = "MIT"
+description = "A tool to generate QR codes with watermarks"
+readme = "README.md"
+homepage = "https://github.com/hlsxx/qrwatermark"
+repository = "https://github.com/hlsxx/qrwatermark"
+keywords = ["qr-code", "watermark"]
 
 [dependencies]
 image = "0.25.2"
