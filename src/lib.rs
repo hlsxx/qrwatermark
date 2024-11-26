@@ -9,7 +9,7 @@ use traits::{builder::Builder, rgb::ToRgb};
 use image::{DynamicImage, ImageBuffer, Pixel, Rgb};
 use imageproc::drawing::Canvas;
 use qrcodegen::{QrCode, QrCodeEcc};
-use configs::image_config::{ImageConfigBuilder, ImageConfig};
+use configs::image_config::{ImageConfig, ImageConfigBuilder, ImagePixelType};
 use configs::logo_config::{LogoConfigBuilder, LogoConfig};
 
 impl ToRgb for Vec<u8> {
@@ -179,8 +179,18 @@ impl<'a> QrWatermark<'a> {
     Ok(())
   }
 
+  fn convert_into_type(&self, pixel_type: ImagePixelType) {
+
+  }
+
   pub fn save_as_image(&mut self, path: &str) -> Result<(), Box<dyn error::Error>> {
-    let image = self.generate_image()?;
+    let mut image = self.generate_image()?;
+
+    // image = match self.image_config.pixel_type {
+    //   ImagePixelType::Dot => self.convert_into_type(ImagePixelType::Dot),
+    //   ImagePixelType::Square => image
+    // };
+
     image.save(path)?;
 
     Ok(())

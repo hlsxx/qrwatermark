@@ -1,11 +1,23 @@
 use crate::traits::builder::Builder;
 
+pub enum ImagePixelType {
+  Square,
+  Dot
+}
+
 pub struct ImageConfig {
   pub pixel_size: u32,
+
+  pub pixel_type: ImagePixelType,
+
   pub margin_size: u32,
+
   pub color: [u8; 3],
+
   pub color_gradient: Option<([u8; 3], [u8; 3])>,
+
   pub background_color: [u8; 3],
+
   pub is_auto_gradient_enabled: bool
 }
 
@@ -13,6 +25,7 @@ impl Default for ImageConfig {
   fn default() -> Self {
     Self {
       pixel_size: 10,
+      pixel_type: ImagePixelType::Square,
       margin_size: 1,
       color: [0, 0, 0],
       color_gradient: None,
@@ -24,6 +37,7 @@ impl Default for ImageConfig {
 
 pub struct ImageConfigBuilder {
   pixel_size: Option<u32>,
+  pixel_type: Option<ImagePixelType>,
   margin_size: Option<u32>,
   color: Option<[u8; 3]>,
   color_gradient: Option<([u8; 3], [u8; 3])>,
@@ -35,6 +49,7 @@ impl Builder<ImageConfig> for ImageConfigBuilder {
   fn new() -> Self {
     Self {
       pixel_size: None,
+      pixel_type: None,
       margin_size: None,
       color: None,
       color_gradient: None,
@@ -48,6 +63,7 @@ impl Builder<ImageConfig> for ImageConfigBuilder {
 
     ImageConfig {
       pixel_size: self.pixel_size.unwrap_or(image_config_default.pixel_size),
+      pixel_type: self.pixel_type.unwrap_or(image_config_default.pixel_type),
       margin_size: self.margin_size.unwrap_or(image_config_default.margin_size),
       color: self.color.unwrap_or(image_config_default.color),
       color_gradient: self.color_gradient,
@@ -61,6 +77,12 @@ impl ImageConfigBuilder {
   /// Sets the default pixel size
   pub fn pixel_size(mut self, size: u32) -> Self {
     self.pixel_size = Some(size);
+    self
+  }
+
+  /// Sets the default pixel type
+  pub fn pixel_type(mut self, pixel_type: ImagePixelType) -> Self {
+    self.pixel_type = Some(pixel_type);
     self
   }
 

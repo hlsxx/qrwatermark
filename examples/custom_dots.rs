@@ -1,7 +1,7 @@
 use qrwatermark::{
   configs::{
     logo_config::LogoConfigBuilder,
-    image_config::ImageConfigBuilder
+    image_config::{self, ImageConfigBuilder}
   },
   traits::builder::Builder,
   QrWatermark,
@@ -12,6 +12,7 @@ fn main() {
   let image_config = ImageConfigBuilder::new()
     .color_gradient(([206, 66, 43], [23, 23, 23])) // Custom gradient colors
     .color([112, 81, 24])
+    .pixel_type(image_config::ImagePixelType::Dot)
     // .is_auto_gradient_enabled() // Auto gradient
     .build();
 
