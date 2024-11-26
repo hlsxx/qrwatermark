@@ -112,7 +112,7 @@ impl<'a> QrWatermark<'a> {
           let b = (start_color[2] as f32 * (1.0 - t) + end_color[2] as f32 * t) as u8;
 
           self.image_config.color.copy_from_slice(&[r, g, b]);
-        } else if self.image_config.is_gradient_enabled {
+        } else if self.image_config.is_auto_gradient_enabled {
           last_y = module_y;
           self.set_auto_gradient_color();
         }

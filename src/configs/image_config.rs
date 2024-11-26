@@ -6,7 +6,7 @@ pub struct ImageConfig {
   pub color: [u8; 3],
   pub color_gradient: Option<([u8; 3], [u8; 3])>,
   pub background_color: [u8; 3],
-  pub is_gradient_enabled: bool
+  pub is_auto_gradient_enabled: bool
 }
 
 impl Default for ImageConfig {
@@ -17,7 +17,7 @@ impl Default for ImageConfig {
       color: [0, 0, 0],
       color_gradient: None,
       background_color: [255, 255, 255],
-      is_gradient_enabled: false
+      is_auto_gradient_enabled: false
     }
   }
 }
@@ -28,7 +28,7 @@ pub struct ImageConfigBuilder {
   color: Option<[u8; 3]>,
   color_gradient: Option<([u8; 3], [u8; 3])>,
   background_color: Option<[u8; 3]>,
-  is_gradient_enabled: bool
+  is_auto_gradient_enabled: bool
 }
 
 impl Builder<ImageConfig> for ImageConfigBuilder {
@@ -39,7 +39,7 @@ impl Builder<ImageConfig> for ImageConfigBuilder {
       color: None,
       color_gradient: None,
       background_color: None,
-      is_gradient_enabled: false
+      is_auto_gradient_enabled: false
     }
   }
 
@@ -52,7 +52,7 @@ impl Builder<ImageConfig> for ImageConfigBuilder {
       color: self.color.unwrap_or(image_config_default.color),
       color_gradient: self.color_gradient,
       background_color: self.background_color.unwrap_or(image_config_default.background_color),
-      is_gradient_enabled: self.is_gradient_enabled
+      is_auto_gradient_enabled: self.is_auto_gradient_enabled
     }
   }
 }
@@ -117,8 +117,8 @@ impl ImageConfigBuilder {
   }
 
   /// Sets auto generated gradient color
-  pub fn is_gradient_enabled(mut self) -> Self {
-    self.is_gradient_enabled = true;
+  pub fn is_auto_gradient_enabled(mut self) -> Self {
+    self.is_auto_gradient_enabled = true;
     return self
   }
 
