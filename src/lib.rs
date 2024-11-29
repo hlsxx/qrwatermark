@@ -205,8 +205,6 @@ impl<'a> QrWatermark<'a> {
     let pixel_color = Rgb::from(self.image_config.color);
     let pixel_bg_color = Rgb::from(self.image_config.background_color);
 
-    // println!("{}, {}", image_width, image_height);
-
     let mut new_image = RgbImage::from_pixel(
       image_width,
       image_height,
@@ -216,12 +214,12 @@ impl<'a> QrWatermark<'a> {
       for y in (0..image_height).step_by(pixel_size as usize) {
         let pixel = image.get_pixel(x, y);
 
-        // let center_x = (x * pixel_size + pixel_size / 2) as i32;
-        // let center_y = (y * pixel_size + pixel_size / 2) as i32;
-        // let radius = (pixel_size / 2) as i32;
+        let center_x = (x + pixel_size / 2) as i32;
+        let center_y = (y + pixel_size / 2) as i32;
+        let radius = (pixel_size / 2) as i32;
 
         if *pixel == Rgb::from(self.image_config.color) {
-          draw_filled_circle_mut(&mut new_image, (x as i32, y as i32), 5, pixel_color);
+          draw_filled_circle_mut(&mut new_image, (center_x, center_y), radius, pixel_color);
         }
       }
     }
@@ -253,8 +251,11 @@ impl<'a> QrWatermark<'a> {
   }
 
   /// Saves the generated QR code
-  /// Into the specific path
-  pub fn save_as_image<P: AsRef<Path>>(&mut self, path: P) -> Result<(), Box<dyn error::Error>> {
+  /// into the specific path
+  pub fn save_as_image<P: AsRef<Path>>(
+    &mut self,
+    path: P
+  ) -> Result<(), Box<dyn error::Error>> {
     let mut image = self.generate_image()?;
 
     if let Some(background_image_path) = &self.image_config.background_image_path {
