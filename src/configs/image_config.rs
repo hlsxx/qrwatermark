@@ -32,7 +32,10 @@ pub struct ImageConfig {
   pub background_image_path: Option<PathBuf>,
 
   // Auto gradient creation
-  pub is_auto_gradient_enabled: bool
+  pub is_auto_gradient_enabled: bool,
+
+  // Random color for the specific pixel
+  pub has_random_pixel_color: bool
 }
 
 impl Default for ImageConfig {
@@ -45,7 +48,8 @@ impl Default for ImageConfig {
       color_gradient: None,
       background_color: [255, 255, 255],
       background_image_path: None,
-      is_auto_gradient_enabled: false
+      is_auto_gradient_enabled: false,
+      has_random_pixel_color: false
     }
   }
 }
@@ -58,7 +62,8 @@ pub struct ImageConfigBuilder {
   color_gradient: Option<([u8; 3], [u8; 3])>,
   background_color: Option<[u8; 3]>,
   background_image_path: Option<PathBuf>,
-  is_auto_gradient_enabled: bool
+  is_auto_gradient_enabled: bool,
+  has_random_pixel_color: bool
 }
 
 impl Builder<ImageConfig> for ImageConfigBuilder {
@@ -71,7 +76,8 @@ impl Builder<ImageConfig> for ImageConfigBuilder {
       color_gradient: None,
       background_color: None,
       background_image_path: None,
-      is_auto_gradient_enabled: false
+      is_auto_gradient_enabled: false,
+      has_random_pixel_color: false
     }
   }
 
@@ -86,7 +92,8 @@ impl Builder<ImageConfig> for ImageConfigBuilder {
       color_gradient: self.color_gradient,
       background_color: self.background_color.unwrap_or(image_config_default.background_color),
       background_image_path: self.background_image_path,
-      is_auto_gradient_enabled: self.is_auto_gradient_enabled
+      is_auto_gradient_enabled: self.is_auto_gradient_enabled,
+      has_random_pixel_color: self.has_random_pixel_color
     }
   }
 }
@@ -166,6 +173,12 @@ impl ImageConfigBuilder {
   /// Sets auto generated gradient color
   pub fn is_auto_gradient_enabled(mut self) -> Self {
     self.is_auto_gradient_enabled = true;
+    return self
+  }
+
+  /// Sets auto random pixel color generation
+  pub fn has_random_pixel_color(mut self) -> Self {
+    self.has_random_pixel_color = true;
     return self
   }
 

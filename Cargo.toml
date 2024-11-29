@@ -14,6 +14,7 @@ keywords = ["qr-code", "watermark"]
 image = "0.25.2"
 imageproc = "0.25.0"
 qrcodegen = "1.8.0"
+rand = "0.8.5"
 rusttype = "0.9.3"
 
 [lib]

@@ -13,7 +13,7 @@ fn main() {
   // Custom image config
   let image_config = ImageConfigBuilder::new()
     .pixel_size(15)
-    .color([10, 10, 10])
+    .has_random_pixel_color()
     .background_image("./imgs/background.jpg")
     .build();
 

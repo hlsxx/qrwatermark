@@ -11,6 +11,7 @@ use imageproc::drawing::{draw_filled_circle_mut, Canvas};
 use qrcodegen::{QrCode, QrCodeEcc};
 use configs::image_config::{ImageConfig, ImageConfigBuilder, ImagePixelType};
 use configs::logo_config::{LogoConfigBuilder, LogoConfig};
+use rand::{thread_rng, Rng};
 
 impl ToRgb for Vec<u8> {
   fn to_rgb(&self) -> Result<Rgb<u8>, &'static str> {
@@ -193,6 +194,18 @@ impl<'a> QrWatermark<'a> {
     !unimplemented!();
   }
 
+  fn generate_random_color(&self) -> Rgb<u8> {
+    let mut rng = thread_rng();
+
+    let pixel = Rgb::from([
+      rng.gen_range(0..=255_u8),
+      rng.gen_range(0..=255),
+      rng.gen_range(0..=255)
+    ]);
+
+    pixel
+  }
+
   /// Applies dots pixels
   fn apply_dot_pixels(
     &self,
@@ -213,6 +226,12 @@ impl<'a> QrWatermark<'a> {
     for x in (0..image_width).step_by(pixel_size as usize) {
       for y in (0..image_height).step_by(pixel_size as usize) {
         let pixel = image.get_pixel(x, y);
+
+        let pixel_color_formatted = if self.image_config.has_random_pixel_color {
+          self.generate_random_color()
+        } else {
+          pixel_color
+        };
 
         let center_x = (x + pixel_size / 2) as i32;
         let center_y = (y + pixel_size / 2) as i32;
