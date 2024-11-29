@@ -1,23 +1,36 @@
+use std::path::{Path, PathBuf};
+
 use crate::traits::builder::Builder;
 
+/// Image pixel shape type
 pub enum ImagePixelType {
   Square,
   Dot
 }
 
 pub struct ImageConfig {
+  // Size of the pixel
   pub pixel_size: u32,
 
+  // Type of the pixel
   pub pixel_type: ImagePixelType,
 
+  // Margin of the image
   pub margin_size: u32,
 
+  // Pixel color
   pub color: [u8; 3],
 
+  // Pixel gradient color
   pub color_gradient: Option<([u8; 3], [u8; 3])>,
 
+  // Background pixel color
   pub background_color: [u8; 3],
 
+  // Background image, exclude the background pixel
+  pub background_image_path: Option<PathBuf>,
+
+  // Auto gradient creation
   pub is_auto_gradient_enabled: bool
 }
 
@@ -30,6 +43,7 @@ impl Default for ImageConfig {
       color: [0, 0, 0],
       color_gradient: None,
       background_color: [255, 255, 255],
+      background_image_path: None,
       is_auto_gradient_enabled: false
     }
   }
@@ -42,6 +56,7 @@ pub struct ImageConfigBuilder {
   color: Option<[u8; 3]>,
   color_gradient: Option<([u8; 3], [u8; 3])>,
   background_color: Option<[u8; 3]>,
+  background_image_path: Option<PathBuf>,
   is_auto_gradient_enabled: bool
 }
 
@@ -54,6 +69,7 @@ impl Builder<ImageConfig> for ImageConfigBuilder {
       color: None,
       color_gradient: None,
       background_color: None,
+      background_image_path: None,
       is_auto_gradient_enabled: false
     }
   }
@@ -68,6 +84,7 @@ impl Builder<ImageConfig> for ImageConfigBuilder {
       color: self.color.unwrap_or(image_config_default.color),
       color_gradient: self.color_gradient,
       background_color: self.background_color.unwrap_or(image_config_default.background_color),
+      background_image_path: self.background_image_path,
       is_auto_gradient_enabled: self.is_auto_gradient_enabled
     }
   }
@@ -80,7 +97,7 @@ impl ImageConfigBuilder {
     self
   }
 
-  /// Sets the default pixel type
+  /// Sets the default pixel shape type
   pub fn pixel_type(mut self, pixel_type: ImagePixelType) -> Self {
     self.pixel_type = Some(pixel_type);
     self
@@ -135,6 +152,13 @@ impl ImageConfigBuilder {
   /// ```
   pub fn background_color(mut self, rgb: [u8; 3]) -> Self {
     self.background_color = Some(rgb);
+    self
+  }
+
+  /// Sets the background image
+  /// This option exclude background_color
+  pub fn background_image(mut self, path: impl Into<PathBuf>) -> Self {
+    self.background_image_path = Some(path.into());
     self
   }
 

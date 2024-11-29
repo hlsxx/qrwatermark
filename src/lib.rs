@@ -2,11 +2,11 @@ pub mod configs;
 pub mod traits;
 
 use std::{error, io};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use traits::{builder::Builder, rgb::ToRgb};
 
-use image::{DynamicImage, ImageBuffer, Pixel, Rgb};
+use image::{DynamicImage, ImageBuffer, ImageReader, Pixel, Rgb, RgbImage};
 use imageproc::drawing::Canvas;
 use qrcodegen::{QrCode, QrCodeEcc};
 use configs::image_config::{ImageConfig, ImageConfigBuilder, ImagePixelType};
@@ -37,15 +37,25 @@ impl Default for QrCodeConfig {
 
 #[allow(unused)]
 pub struct QrWatermark<'a> {
+  // QR code text
   text: &'a str,
+
+  // Path to a logo (watermark)
   logo_path: Option<PathBuf>,
+
+  // QR code config (generating)
   qr_code_config: QrCodeConfig,
+
+  // Whole generated image config
   image_config: ImageConfig,
+
+  // Logo image config
   logo_config: LogoConfig
 }
 
 impl<'a> QrWatermark<'a> {
 
+  /// Creates new QrWatemark
   pub fn new(text: &'a str) -> Self {
     Self {
       text,
@@ -180,11 +190,40 @@ impl<'a> QrWatermark<'a> {
   }
 
   fn convert_into_type(&self, pixel_type: ImagePixelType) {
-
+    !unimplemented!();
   }
 
-  pub fn save_as_image(&mut self, path: &str) -> Result<(), Box<dyn error::Error>> {
+  /// Applies the background image
+  fn apply_background_image(
+    &self,
+    image: ImageBuffer<Rgb<u8>, Vec<u8>>,
+    path: &PathBuf
+  ) -> Result<ImageBuffer<Rgb<u8>, Vec<u8>>, Box<dyn error::Error>>  {
+    let bg_image = ImageReader::open(path)?
+      .decode()?;
+
+    let image_with_background = ImageBuffer::from_fn(image.width(), image.height(), |x, y| {
+      let pixel = image.get_pixel(x, y);
+
+      // Replace the pixel background color
+      if pixel == &Rgb::from(self.image_config.background_color) {
+        return bg_image.get_pixel(x, y).to_rgb();
+      }
+
+      pixel.to_rgb()
+    });
+
+    Ok(image_with_background)
+  }
+
+  /// Saves the generated QR code
+  /// Into the specific path
+  pub fn save_as_image<P: AsRef<Path>>(&mut self, path: P) -> Result<(), Box<dyn error::Error>> {
     let mut image = self.generate_image()?;
+
+    if let Some(background_image_path) = &self.image_config.background_image_path {
+      image = self.apply_background_image(image, background_image_path)?;
+    }
 
     // image = match self.image_config.pixel_type {
     //   ImagePixelType::Dot => self.convert_into_type(ImagePixelType::Dot),
