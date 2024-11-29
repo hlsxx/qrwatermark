@@ -12,7 +12,8 @@ use qrwatermark::{
 fn main() {
   // Custom image config
   let image_config = ImageConfigBuilder::new()
-    .color([112, 81, 24])
+    .pixel_size(15)
+    .color([10, 10, 10])
     .background_image("./imgs/background.jpg")
     .build();
 

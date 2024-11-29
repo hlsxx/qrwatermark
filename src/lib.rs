@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use traits::{builder::Builder, rgb::ToRgb};
 
 use image::{DynamicImage, ImageBuffer, ImageReader, Pixel, Rgb, RgbImage};
-use imageproc::drawing::Canvas;
+use imageproc::drawing::{draw_filled_circle_mut, Canvas};
 use qrcodegen::{QrCode, QrCodeEcc};
 use configs::image_config::{ImageConfig, ImageConfigBuilder, ImagePixelType};
 use configs::logo_config::{LogoConfigBuilder, LogoConfig};
@@ -193,6 +193,42 @@ impl<'a> QrWatermark<'a> {
     !unimplemented!();
   }
 
+  /// Applies dots pixels
+  fn apply_dot_pixels(
+    &self,
+    image: &mut ImageBuffer<Rgb<u8>, Vec<u8>>
+  ) {
+    let image_width = image.width();
+    let image_height = image.height();
+
+    let pixel_size = self.image_config.pixel_size;
+    let pixel_color = Rgb::from(self.image_config.color);
+    let pixel_bg_color = Rgb::from(self.image_config.background_color);
+
+    // println!("{}, {}", image_width, image_height);
+
+    let mut new_image = RgbImage::from_pixel(
+      image_width,
+      image_height,
+      pixel_bg_color);
+
+    for x in (0..image_width).step_by(pixel_size as usize) {
+      for y in (0..image_height).step_by(pixel_size as usize) {
+        let pixel = image.get_pixel(x, y);
+
+        // let center_x = (x * pixel_size + pixel_size / 2) as i32;
+        // let center_y = (y * pixel_size + pixel_size / 2) as i32;
+        // let radius = (pixel_size / 2) as i32;
+
+        if *pixel == Rgb::from(self.image_config.color) {
+          draw_filled_circle_mut(&mut new_image, (x as i32, y as i32), 5, pixel_color);
+        }
+      }
+    }
+
+    *image = new_image;
+  }
+
   /// Applies the background image
   fn apply_background_image(
     &self,
@@ -225,10 +261,9 @@ impl<'a> QrWatermark<'a> {
       image = self.apply_background_image(image, background_image_path)?;
     }
 
-    // image = match self.image_config.pixel_type {
-    //   ImagePixelType::Dot => self.convert_into_type(ImagePixelType::Dot),
-    //   ImagePixelType::Square => image
-    // };
+    if self.image_config.pixel_type == ImagePixelType::Dot {
+      self.apply_dot_pixels(&mut image);
+    }
 
     image.save(path)?;
 

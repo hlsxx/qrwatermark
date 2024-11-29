@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 use crate::traits::builder::Builder;
 
 /// Image pixel shape type
+#[derive(PartialEq)]
 pub enum ImagePixelType {
   Square,
   Dot

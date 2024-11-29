@@ -10,10 +10,9 @@ use qrwatermark::{
 fn main() {
   // Custom image config
   let image_config = ImageConfigBuilder::new()
-    .color_gradient(([206, 66, 43], [23, 23, 23])) // Custom gradient colors
     .color([112, 81, 24])
+    .pixel_size(10)
     .pixel_type(image_config::ImagePixelType::Dot)
-    // .is_auto_gradient_enabled() // Auto gradient
     .build();
 
   // Custom logo config
