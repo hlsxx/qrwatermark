@@ -2,8 +2,7 @@ use std::path::PathBuf;
 
 use qrwatermark::{
   configs::{
-    logo_config::LogoConfigBuilder,
-    image_config::ImageConfigBuilder
+    image_config::{ImageConfigBuilder, ImagePixelType}, logo_config::LogoConfigBuilder
   },
   traits::builder::Builder,
   QrWatermark,

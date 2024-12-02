@@ -31,6 +31,9 @@ pub struct ImageConfig {
   // Background image, exclude the background pixel
   pub background_image_path: Option<PathBuf>,
 
+  // Foreground image, exclude the pixel color
+  pub foreground_image_path: Option<PathBuf>,
+
   // Auto gradient creation
   pub is_auto_gradient_enabled: bool,
 
@@ -48,6 +51,7 @@ impl Default for ImageConfig {
       color_gradient: None,
       background_color: [255, 255, 255],
       background_image_path: None,
+      foreground_image_path: None,
       is_auto_gradient_enabled: false,
       has_random_pixel_color: false
     }
@@ -62,6 +66,7 @@ pub struct ImageConfigBuilder {
   color_gradient: Option<([u8; 3], [u8; 3])>,
   background_color: Option<[u8; 3]>,
   background_image_path: Option<PathBuf>,
+  foreground_image_path: Option<PathBuf>,
   is_auto_gradient_enabled: bool,
   has_random_pixel_color: bool
 }
@@ -76,6 +81,7 @@ impl Builder<ImageConfig> for ImageConfigBuilder {
       color_gradient: None,
       background_color: None,
       background_image_path: None,
+      foreground_image_path: None,
       is_auto_gradient_enabled: false,
       has_random_pixel_color: false
     }
@@ -92,6 +98,7 @@ impl Builder<ImageConfig> for ImageConfigBuilder {
       color_gradient: self.color_gradient,
       background_color: self.background_color.unwrap_or(image_config_default.background_color),
       background_image_path: self.background_image_path,
+      foreground_image_path: self.foreground_image_path,
       is_auto_gradient_enabled: self.is_auto_gradient_enabled,
       has_random_pixel_color: self.has_random_pixel_color
     }
@@ -167,6 +174,13 @@ impl ImageConfigBuilder {
   /// This option exclude background_color
   pub fn background_image(mut self, path: impl Into<PathBuf>) -> Self {
     self.background_image_path = Some(path.into());
+    self
+  }
+
+  /// Sets the foreground image
+  /// This option exclude foreground color
+  pub fn foreground_image(mut self, path: impl Into<PathBuf>) -> Self {
+    self.foreground_image_path = Some(path.into());
     self
   }
 

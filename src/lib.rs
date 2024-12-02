@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 
 use traits::{builder::Builder, rgb::ToRgb};
 
-use image::{DynamicImage, ImageBuffer, ImageReader, Pixel, Rgb, RgbImage};
+use image::{DynamicImage, ImageBuffer, ImageReader, Pixel, Rgb, RgbImage, Rgba};
 use imageproc::drawing::{draw_filled_circle_mut, Canvas};
 use qrcodegen::{QrCode, QrCodeEcc};
 use configs::image_config::{ImageConfig, ImageConfigBuilder, ImagePixelType};
@@ -246,27 +246,49 @@ impl<'a> QrWatermark<'a> {
     *image = new_image;
   }
 
-  /// Applies the background image
-  fn apply_background_image(
+  fn apply_pixels_from_image_background(
     &self,
     image: ImageBuffer<Rgb<u8>, Vec<u8>>,
     path: &PathBuf
   ) -> Result<ImageBuffer<Rgb<u8>, Vec<u8>>, Box<dyn error::Error>>  {
-    let bg_image = ImageReader::open(path)?
+    self.apply_pixels_from_image(image, path, |pixel| {
+      pixel == &Rgb::from(self.image_config.background_color)
+    })
+  }
+
+  fn apply_pixels_from_image_foreground(
+    &self,
+    image: ImageBuffer<Rgb<u8>, Vec<u8>>,
+    path: &PathBuf
+  ) -> Result<ImageBuffer<Rgb<u8>, Vec<u8>>, Box<dyn error::Error>>  {
+    self.apply_pixels_from_image(image, path, |pixel| {
+      pixel == &Rgb::from(self.image_config.color)
+    })
+  }
+
+  /// Applies the background image
+  fn apply_pixels_from_image<F>(
+    &self,
+    current_image: ImageBuffer<Rgb<u8>, Vec<u8>>,
+    path: &PathBuf,
+    compare_method: F
+  ) -> Result<ImageBuffer<Rgb<u8>, Vec<u8>>, Box<dyn error::Error>> 
+    where F: Fn(&Rgb<u8>) -> bool
+  {
+    let image = ImageReader::open(path)?
       .decode()?;
 
-    let image_with_background = ImageBuffer::from_fn(image.width(), image.height(), |x, y| {
-      let pixel = image.get_pixel(x, y);
+    let new_image = ImageBuffer::from_fn(current_image.width(), current_image.height(), |x, y| {
+      let pixel_color = current_image.get_pixel(x, y);
 
-      // Replace the pixel background color
-      if pixel == &Rgb::from(self.image_config.background_color) {
-        return bg_image.get_pixel(x, y).to_rgb();
+      if compare_method(pixel_color) {
+        return image.get_pixel(x, y).to_rgb();
       }
 
-      pixel.to_rgb()
+      pixel_color.to_rgb()
     });
 
-    Ok(image_with_background)
+    Ok(new_image)
   }
 
   /// Saves the generated QR code
@@ -277,12 +299,18 @@ impl<'a> QrWatermark<'a> {
   ) -> Result<(), Box<dyn error::Error>> {
     let mut image = self.generate_image()?;
 
-    if let Some(background_image_path) = &self.image_config.background_image_path {
-      image = self.apply_background_image(image, background_image_path)?;
-    }
-
     if self.image_config.pixel_type == ImagePixelType::Dot {
       self.apply_dot_pixels(&mut image);
+    }
+
+    // Apply background image
+    if let Some(background_image_path) = &self.image_config.background_image_path {
+      image = self.apply_pixels_from_image_background(image, background_image_path)?;
+    }
+
+    // Apply foreground image
+    if let Some(foreground_image_path) = &self.image_config.foreground_image_path {
+      image = self.apply_pixels_from_image_foreground(image, foreground_image_path)?;
     }
 
     image.save(path)?;
