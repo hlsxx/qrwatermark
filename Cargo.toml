@@ -1,6 +1,6 @@
 [package]
 name = "qrwatermark"
-version = "1.0.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["hlsxx <holespato@email.com>"]
 license = "MIT"
