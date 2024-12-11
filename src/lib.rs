@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 
 use traits::{builder::Builder, rgb::ToRgb};
 
-use image::{DynamicImage, ImageBuffer, ImageReader, Pixel, Rgb, RgbImage, Rgba};
+use image::{DynamicImage, ImageBuffer, ImageReader, Pixel, Rgb, RgbImage};
 use imageproc::drawing::{draw_filled_circle_mut, Canvas};
 use qrcodegen::{QrCode, QrCodeEcc};
 use configs::image_config::{ImageConfig, ImageConfigBuilder, ImagePixelType};
@@ -179,8 +179,7 @@ impl<'a> QrWatermark<'a> {
     let n = qr_code.size();
 
     for i in 0..n {
-      for j in 0..n {
-        let c = if qr_code.get_module(i, j) { '█' } else { ' ' };
+      for j in 0..n { let c = if qr_code.get_module(i, j) { '█' } else { ' ' };
         print!("{0}{0}", c);
       }
 
@@ -291,12 +290,10 @@ impl<'a> QrWatermark<'a> {
     Ok(new_image)
   }
 
-  /// Saves the generated QR code
-  /// into the specific path
-  pub fn save_as_image<P: AsRef<Path>>(
-    &mut self,
-    path: P
-  ) -> Result<(), Box<dyn error::Error>> {
+  /*
+  * Prepares image
+  */
+  fn get_prepared_image(&mut self) -> Result<ImageBuffer<Rgb<u8>, Vec<u8>>, Box<dyn error::Error>> {
     let mut image = self.generate_image()?;
 
     if self.image_config.pixel_type == ImagePixelType::Dot {
@@ -313,7 +310,17 @@ impl<'a> QrWatermark<'a> {
       image = self.apply_pixels_from_image_foreground(image, foreground_image_path)?;
     }
 
-    image.save(path)?;
+    Ok(image)
+  }
+
+  /// Saves the generated QR code
+  /// into the specific path
+  pub fn save_as_image<P: AsRef<Path>>(
+    &mut self,
+    path: P
+  ) -> Result<(), Box<dyn error::Error>> {
+    self.get_prepared_image()?
+      .save(path)?;
 
     Ok(())
   }
